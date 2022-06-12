@@ -11,6 +11,10 @@
 		src: 'img/httpcloud3steamusercontentcomugc960860341956229149FC980D306FA8FE74C552981167CBDF4305821B31.jpg'
 	};
 </script>
+
+<div>
+	<OriginalImageCollapsible src={canvasInformation.src} />
+</div>
 <div>
 	<CardEditor {...canvasInformation} bind:width bind:height />
 </div>
