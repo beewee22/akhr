@@ -3,7 +3,7 @@
 	let isOpen: boolean;
 </script>
 
-<details accesskey="originalImage" class="originalImageDetail" bind:open={isOpen}>
+<details class="originalImageDetail" bind:open={isOpen}>
 	<summary>
 		<h2>{src}</h2>
 		<span class="originalImageToggle">
