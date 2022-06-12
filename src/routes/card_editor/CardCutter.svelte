@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/env';
+import { globalLoading } from '$lib/store/ui';
 
 	export let width = 7500;
 	export let height = 7350;
@@ -8,7 +9,7 @@
 	export let src: string;
 	export let index = 1;
 	let imgElement: HTMLImageElement;
-  let isImageLoaded = false;
+	let isImageLoaded = false;
 
 	$: zeroBasedIndex = index - 1;
 	$: maxCardIndex = columns * rows;
@@ -16,9 +17,9 @@
 	$: cardWidth = width / columns;
 	$: cardHeight = height / rows;
 
-  $: {
-    index = index < 1 ? 1 : index > maxCardIndex ? maxCardIndex : index;
-  }
+	$: {
+		index = index < 1 ? 1 : index > maxCardIndex ? maxCardIndex : index;
+	}
 
 	$: {
 		if (browser) {
@@ -28,9 +29,9 @@
 
 	$: {
 		if (browser && isImageLoaded) {
-      requestAnimationFrame(() => {
-        renderCard(zeroBasedIndex);
-      })
+			requestAnimationFrame(() => {
+				renderCard(zeroBasedIndex);
+			});
 		}
 	}
 
@@ -38,10 +39,10 @@
 		const _img = new Image();
 		_img.src = src;
 		imgElement = _img;
-    _img.addEventListener('load', () => {
-      calcImageSize(_img)
-      isImageLoaded = true;
-    });
+		_img.addEventListener('load', () => {
+			calcImageSize(_img);
+			isImageLoaded = true;
+		});
 	};
 
 	const calcImageSize = (_img: HTMLImageElement) => {
@@ -59,14 +60,45 @@
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.drawImage(imgElement, -x, -y);
 	};
+
+	const cutImages = () => {
+    $globalLoading = true;
+    setTimeout(() => {
+      $globalLoading = false;
+    }, 1000);
+  };
 </script>
 
-<div style="display:flex; flex-direction: column; align-items: center;">
-	<span>Current Index: <input type="number" bind:value={index}></span>
-	<div style="display:flex; flex-direction: row">
-		<button disabled={index < 0} on:click={() => (index--)}>⬅️</button>
-		<button disabled={index > maxCardIndex} on:click={() => (index++)}>➡️</button
-		>
+<div class="cutterContainer">
+	<div class="navBtns">
+		<div>
+			<button disabled={index < 0} on:click={() => index--}>⬅️</button>
+		</div>
+		<span>Current Index: <input type="number" bind:value={index} /></span>
+
+		<button disabled={index > maxCardIndex} on:click={() => index++}>➡️</button>
+	</div>
+	<div>
+		<button class="cutBtn" on:click={cutImages}>Cut images</button>
 	</div>
 	<canvas width={cardWidth} height={cardHeight} style="border: 1px solid black" />
 </div>
+
+<style lang="scss">
+  button {
+    cursor: pointer;
+  }
+	.cutterContainer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		row-gap: 0.5rem;
+		.navBtns {
+			display: flex;
+			column-gap: 1rem;
+		}
+		.cutBtn {
+			padding: 0.3rem 0.8rem;
+		}
+	}
+</style>
