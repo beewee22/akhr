@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { browser } from '$app/env';
-import { globalLoading } from '$lib/store/ui';
+import { goto } from '$app/navigation';
+import { CardPositionStore } from '$lib/store';
+	import { globalLoading } from '$lib/store/ui';
+	import { CardPositionClass } from '$lib/types';
 
 	export let width = 7500;
 	export let height = 7350;
@@ -10,6 +13,8 @@ import { globalLoading } from '$lib/store/ui';
 	export let index = 1;
 	let imgElement: HTMLImageElement;
 	let isImageLoaded = false;
+	let canvas: HTMLCanvasElement;
+	let cards: CardPositionClass[] = [];
 
 	$: zeroBasedIndex = index - 1;
 	$: maxCardIndex = columns * rows;
@@ -35,6 +40,12 @@ import { globalLoading } from '$lib/store/ui';
 		}
 	}
 
+	$: {
+		if (browser && isImageLoaded) {
+			cards = getCards();
+		}
+	}
+
 	const loadImage = (src: string) => {
 		const _img = new Image();
 		_img.src = src;
@@ -52,8 +63,17 @@ import { globalLoading } from '$lib/store/ui';
 		cardHeight = height / rows;
 	};
 
+	const getCards = () => {
+		return Array.from({ length: maxCardIndex }, (_, i) => {
+      const rowIndex = Math.floor(i / columns);
+			const y = rowIndex * cardHeight;
+      const columnIndex = Math.floor(i % columns);
+			const x = columnIndex * cardWidth;
+			return new CardPositionClass(x, y, cardWidth, cardHeight, src, rowIndex, columnIndex);
+		});
+	};
+
 	const renderCard = (zeroBasedIndex: number) => {
-		const canvas: HTMLCanvasElement = document.querySelector('canvas') as HTMLCanvasElement;
 		const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 		const x = Math.floor(zeroBasedIndex % columns) * cardWidth;
 		const y = Math.floor(zeroBasedIndex / columns) * cardHeight;
@@ -61,12 +81,12 @@ import { globalLoading } from '$lib/store/ui';
 		ctx.drawImage(imgElement, -x, -y);
 	};
 
-	const cutImages = () => {
-    $globalLoading = true;
-    setTimeout(() => {
-      $globalLoading = false;
-    }, 1000);
-  };
+	const saveImages = () => {
+		$globalLoading = true;
+    CardPositionStore.addMany(cards);
+		$globalLoading = false;
+    goto("/card/list")
+	};
 </script>
 
 <div class="cutterContainer">
@@ -79,15 +99,20 @@ import { globalLoading } from '$lib/store/ui';
 		<button disabled={index > maxCardIndex} on:click={() => index++}>➡️</button>
 	</div>
 	<div>
-		<button class="cutBtn" on:click={cutImages}>Cut images</button>
+		<button class="cutBtn" on:click={saveImages}>Cut images</button>
 	</div>
-	<canvas width={cardWidth} height={cardHeight} style="border: 1px solid black" />
+	<canvas
+		bind:this={canvas}
+		width={cardWidth}
+		height={cardHeight}
+		style="border: 1px solid black"
+	/>
 </div>
 
 <style lang="scss">
-  button {
-    cursor: pointer;
-  }
+	button {
+		cursor: pointer;
+	}
 	.cutterContainer {
 		display: flex;
 		flex-direction: column;

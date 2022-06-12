@@ -8,7 +8,7 @@
 	const canvasInformation = {
 		columns: 10,
 		rows: 7,
-		src: 'img/httpcloud3steamusercontentcomugc960860341956229149FC980D306FA8FE74C552981167CBDF4305821B31.jpg'
+		src: '/img/httpcloud3steamusercontentcomugc960860341956229149FC980D306FA8FE74C552981167CBDF4305821B31.jpg'
 	};
 </script>
 
