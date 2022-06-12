@@ -32,6 +32,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"node-sass": "^7.0.1"
+		"sass": "^1.52.3"
 	}
 }
