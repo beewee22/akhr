@@ -22,6 +22,10 @@ import { CardPositionStore } from '$lib/store';
 	let blankTitleHolePunchingX = 107;
 	let blankTitleHolePunchingY = 105;
 	let blankTitleHolePunchingRadius = 56;
+	let isBlankDialogHolePunchingPreview = false;
+	let blankDialogHolePunchingX = 698;
+	let blankDialogHolePunchingY = 991;
+	let blankDialogHolePunchingRadius = 48;
 	let adjustBlankTitleWidth = 68;
 	let adjustBlankTitleHeight = 67;
 	let adjustBlankTitleOffsetX = -33;
@@ -33,6 +37,8 @@ import { CardPositionStore } from '$lib/store';
 	let adjustBlankDialogHeight = 86;
 	let adjustBlankDialogOffsetX = 0;
 	let adjustBlankDialogOffsetY = 41;
+	let adjustBlankDialogFilterSapia = 0;
+	let adjustBlankDialogFilterSaturate = 100;
 
 	$: zeroBasedIndex = index - 1;
 	$: maxCardIndex = columns * rows;
@@ -65,12 +71,18 @@ import { CardPositionStore } from '$lib/store';
 					blankTitleHolePunchingX,
 					blankTitleHolePunchingY,
 					blankTitleHolePunchingRadius,
+					isBlankDialogHolePunchingPreview,
+					blankDialogHolePunchingX,
+					blankDialogHolePunchingY,
+					blankDialogHolePunchingRadius,
 					adjustBlankTitleFilterSapia,
 					adjustBlankTitleFilterSaturate,
 					adjustBlankDialogWidth,
 					adjustBlankDialogHeight,
 					adjustBlankDialogOffsetX,
 					adjustBlankDialogOffsetY,
+					adjustBlankDialogFilterSapia,
+					adjustBlankDialogFilterSaturate,
 					isDisplayBlankTitle,
 					isDisplayBlankDialog
 				);
@@ -123,12 +135,18 @@ import { CardPositionStore } from '$lib/store';
 		blankTitleHolePunchingX: number,
 		blankTitleHolePunchingY: number,
 		blankTitleHolePunchingRadius: number,
+		isBlankDialogHolePunchingPreview: boolean,
+		blankDialogHolePunchingX: number,
+		blankDialogHolePunchingY: number,
+		blankDialogHolePunchingRadius: number,
 		adjustBlankTitleFilterSapia: number,
 		adjustBlankTitleFilterSaturate: number,
 		adjustBlankDialogWidth: number,
 		adjustBlankDialogHeight: number,
 		adjustBlankDialogOffsetX: number,
 		adjustBlankDialogOffsetY: number,
+		adjustBlankDialogFilterSapia: number,
+		adjustBlankDialogFilterSaturate: number,
 		isRenderBlankTitle: boolean,
 		isRenderBlankDialog: boolean
 		) => {
@@ -183,8 +201,35 @@ import { CardPositionStore } from '$lib/store';
 			const blankDialog = new Image();
 			blankDialog.src = '/resources/blank_cards/blank_dialog_1.png';
 			blankDialog.addEventListener('load', () => {
-				ctx.drawImage(
+				const dialogCanvas = document.createElement('canvas');
+				const dialogContext = dialogCanvas.getContext('2d') as CanvasRenderingContext2D;
+				dialogCanvas.width = blankDialog.width;
+				dialogCanvas.height = blankDialog.height;
+				dialogContext.filter =`saturate(${adjustBlankDialogFilterSaturate}%) sepia(${adjustBlankDialogFilterSapia}%)`;
+				dialogContext.drawImage(
 					blankDialog, 
+					0, 0, blankDialog.width, blankDialog.height,
+					0, 0, dialogCanvas.width, dialogCanvas.height
+				);
+
+				if (isBlankDialogHolePunchingPreview) {
+					dialogContext.strokeStyle = '#ff0000';
+					dialogContext.beginPath();
+					dialogContext.arc(blankDialogHolePunchingX, blankDialogHolePunchingY, blankDialogHolePunchingRadius+1, 0, 2 * Math.PI, false);	
+					dialogContext.stroke();
+				}
+
+				dialogContext.save();
+				dialogContext.filter = "blur(5px)";
+				dialogContext.globalCompositeOperation = 'destination-out';
+				dialogContext.beginPath();
+				dialogContext.arc(blankDialogHolePunchingX, blankDialogHolePunchingY, blankDialogHolePunchingRadius, 0, 2 * Math.PI, false);
+				dialogContext.fill();
+				dialogContext.restore();
+				dialogContext.filter = "";
+
+				ctx.drawImage(
+					dialogCanvas, 
 					adjustBlankDialogOffsetX-(adjustBlankDialogWidth/2), -adjustBlankDialogOffsetY, 
 					canvas.width+adjustBlankDialogWidth, canvas.height+adjustBlankDialogHeight
 				);
@@ -253,7 +298,7 @@ import { CardPositionStore } from '$lib/store';
 			</div>
 			<div>
 				<input id="blankTitleAdjustOffsetY" type="number" bind:value={adjustBlankTitleOffsetY}/>
-				<label for="blankTitleAdjustOffsetY">Title offset Y adjustment</label>
+				<label for="blankTitleAdjustOffsetY">Title offset Y</label>
 			</div>
 			<div>
 				<input id="blankTitleFilterSapia" type="number" bind:value={adjustBlankTitleFilterSapia}/>
@@ -302,7 +347,32 @@ import { CardPositionStore } from '$lib/store';
 			</div>
 			<div>
 				<input id="blankDialogAdjustOffsetY" type="number" bind:value={adjustBlankDialogOffsetY}/>
-				<label for="blankDialogAdjustOffsetY">Dialog offset Y adjustment</label>
+				<label for="blankDialogAdjustOffsetY">Dialog offset Y</label>
+			</div>
+			<div>
+				<input id="blankDialogFilterSapia" type="number" bind:value={adjustBlankDialogFilterSapia}/>
+				<label for="blankDialogFilterSapia">Dialog filter sapia</label>
+			</div>
+			<div>
+				<input id="blankDialogFilterSaturate" type="number" bind:value={adjustBlankDialogFilterSaturate}/>
+				<label for="blankDialogFilterSaturate">Dialog filter saturate</label>
+			</div>
+			<br/>
+			<div>
+				<input id="blankDialogHolePunchingPreview" type="checkbox" bind:checked={isBlankDialogHolePunchingPreview} />
+				<label for="blankDialogHolePunchingPreview">Preview Blank Dialog Hole Punching</label>
+			</div>
+			<div>
+				<input id="blankDialogHolePunchingX" type="number" bind:value={blankDialogHolePunchingX}/>
+				<label for="blankDialogHolePunchingX">Dialog hole punching X</label>
+			</div>
+			<div>
+				<input id="blankDialogHolePunchingY" type="number" bind:value={blankDialogHolePunchingY}/>
+				<label for="blankDialogHolePunchingY">Dialog hole punching Y</label>
+			</div>
+			<div>
+				<input id="blankDialogHolePunchingRadius" type="number" bind:value={blankDialogHolePunchingRadius}/>
+				<label for="blankDialogHolePunchingRadius">Dialog hole punching radius</label>
 			</div>
 		</div>
 	</div>
