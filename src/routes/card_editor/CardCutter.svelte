@@ -195,13 +195,13 @@
 			0, 0, subTitleCanvas.width, subTitleCanvas.height
 		);
 
-		context.rotate(adjustBlankSubTitleRotate * Math.PI / 180);
-		context.drawImage(
+		drawRotatedImage(
+			context,
 			subTitleCanvas,
 			adjustBlankSubTitleOffsetX, -adjustBlankSubTitleOffsetY,
-			canvas.width+adjustBlankSubTitleWidth, canvas.height+adjustBlankSubTitleHeight
+			canvas.width+adjustBlankSubTitleWidth, canvas.height+adjustBlankSubTitleHeight,
+			adjustBlankSubTitleRotate
 		);
-		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	const renderBlankTitle = async (
@@ -239,13 +239,13 @@
 			isBlankTitleHolePunchingPreview
 		);
 
-		context.rotate(adjustBlankTitleRotate * Math.PI / 180);
-		context.drawImage(
+		drawRotatedImage(
+			context,
 			titleCanvas,
 			adjustBlankTitleOffsetX, -adjustBlankTitleOffsetY,
-			canvas.width+adjustBlankTitleWidth, canvas.height+adjustBlankTitleHeight
+			canvas.width+adjustBlankTitleWidth, canvas.height+adjustBlankTitleHeight,
+			adjustBlankTitleRotate
 		);
-		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	const renderBlankDialog = async (
@@ -283,12 +283,27 @@
 			isBlankDialogHolePunchingPreview
 		);
 
-		context.rotate(adjustBlankDialogRotate * Math.PI / 180);
-		context.drawImage(
-			dialogCanvas, 
+		drawRotatedImage(
+			context,
+			dialogCanvas,
 			adjustBlankDialogOffsetX-(adjustBlankDialogWidth/2), -adjustBlankDialogOffsetY, 
-			canvas.width+adjustBlankDialogWidth, canvas.height+adjustBlankDialogHeight
+			canvas.width+adjustBlankDialogWidth, canvas.height+adjustBlankDialogHeight,
+			adjustBlankDialogRotate
 		);
+
+	}
+
+	const drawRotatedImage = (
+		context: CanvasRenderingContext2D,
+		image: HTMLCanvasElement,
+		x: number,
+		y: number,
+		dw: number,
+		dh: number,
+		rotate: number
+	) => {
+		context.rotate(rotate * Math.PI / 180);
+		context.drawImage(image, x, y, dw, dh);
 		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
