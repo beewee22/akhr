@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/env';
-import { goto } from '$app/navigation';
-import { CardPositionStore } from '$lib/store';
+	import { goto } from '$app/navigation';
+	import { CardPositionStore } from '$lib/store';
 	import { globalLoading } from '$lib/store/ui';
 	import { CardPositionClass } from '$lib/types';
 
@@ -18,6 +18,7 @@ import { CardPositionStore } from '$lib/store';
 	let adjustSourceOffsetX = 0;
 	let adjustSourceOffsetY = 0;
 	let isDisplayBlankTitle = false;
+	let isDisplayBlankSubTitle = false;
 	let isBlankTitleHolePunchingPreview = false;
 	let blankTitleHolePunchingX = 107;
 	let blankTitleHolePunchingY = 105;
@@ -30,6 +31,10 @@ import { CardPositionStore } from '$lib/store';
 	let adjustBlankTitleHeight = 67;
 	let adjustBlankTitleOffsetX = -33;
 	let adjustBlankTitleOffsetY = 39.2;
+	let adjustBlankSubTitleWidth = 2;
+	let adjustBlankSubTitleHeight = 20;
+	let adjustBlankSubTitleOffsetX = -1;
+	let adjustBlankSubTitleOffsetY = 8;
 	let adjustBlankTitleFilterSapia = -1;
 	let adjustBlankTitleFilterSaturate = 100;
 	let isDisplayBlankDialog = false;
@@ -58,11 +63,30 @@ import { CardPositionStore } from '$lib/store';
 
 	$: {
 		if (browser && isImageLoaded) {
-			requestAnimationFrame(() => {
+			requestAnimationFrame(async () => {
+				const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+				const shadowCanvas = document.createElement('canvas');
+				shadowCanvas.width = cardWidth;
+				shadowCanvas.height = cardHeight;
+				const shadowContext = shadowCanvas.getContext('2d') as CanvasRenderingContext2D;
+
 				renderCard(
+					shadowContext,
 					zeroBasedIndex,
 					adjustSourceOffsetX,
-					adjustSourceOffsetY,
+					adjustSourceOffsetY
+				);
+
+				isDisplayBlankSubTitle && (await renderBlankSubtitle(
+					shadowContext,
+					adjustBlankSubTitleWidth,
+					adjustBlankSubTitleHeight,
+					adjustBlankSubTitleOffsetX,
+					adjustBlankSubTitleOffsetY
+				));
+
+				isDisplayBlankTitle && (await renderBlankTitle(
+					shadowContext,
 					adjustBlankTitleWidth,
 					adjustBlankTitleHeight,
 					adjustBlankTitleOffsetX,
@@ -71,21 +95,26 @@ import { CardPositionStore } from '$lib/store';
 					blankTitleHolePunchingX,
 					blankTitleHolePunchingY,
 					blankTitleHolePunchingRadius,
+					adjustBlankTitleFilterSapia,
+					adjustBlankTitleFilterSaturate
+				));
+
+				isDisplayBlankDialog && (await renderBlankdialog(
+					shadowContext,
 					isBlankDialogHolePunchingPreview,
 					blankDialogHolePunchingX,
 					blankDialogHolePunchingY,
 					blankDialogHolePunchingRadius,
-					adjustBlankTitleFilterSapia,
-					adjustBlankTitleFilterSaturate,
 					adjustBlankDialogWidth,
 					adjustBlankDialogHeight,
 					adjustBlankDialogOffsetX,
 					adjustBlankDialogOffsetY,
 					adjustBlankDialogFilterSapia,
 					adjustBlankDialogFilterSaturate,
-					isDisplayBlankTitle,
-					isDisplayBlankDialog
-				);
+				));
+
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				context.drawImage(shadowCanvas, 0, 0);
 			});
 		}
 	}
@@ -124,9 +153,49 @@ import { CardPositionStore } from '$lib/store';
 	};
 
 	const renderCard = (
+		context: CanvasRenderingContext2D,
 		zeroBasedIndex: number,
 		adjustSourceOffsetX: number,
 		adjustSourceOffsetY: number,
+		) => {
+		const x = Math.floor(zeroBasedIndex % columns) * cardWidth;
+		const y = Math.floor(zeroBasedIndex / columns) * cardHeight;
+		context.drawImage(
+			imgElement,
+			adjustSourceOffsetX-x,
+			-y-adjustSourceOffsetY
+		);
+	};
+
+	const renderBlankSubtitle = async (
+		context: CanvasRenderingContext2D,
+		adjustBlankSubTitleWidth: number,
+		adjustBlankSubTitleHeight: number,
+		adjustBlankSubTitleOffsetX: number,
+		adjustBlankSubTitleOffsetY: number
+	) => {
+		const blankSubTitleImage = await promiseLoadImage('/resources/blank_cards/blank_subtitle_1.png');
+		const subTitleCanvas = document.createElement('canvas');
+		const subTitleContext = subTitleCanvas.getContext('2d') as CanvasRenderingContext2D;
+
+		subTitleCanvas.width = blankSubTitleImage.width;
+		subTitleCanvas.height = blankSubTitleImage.height;
+		subTitleContext.filter =`saturate(${adjustBlankTitleFilterSaturate}%) sepia(${adjustBlankTitleFilterSapia}%)`;
+		subTitleContext.drawImage(
+			blankSubTitleImage, 
+			0, 0, blankSubTitleImage.width, blankSubTitleImage.height,
+			0, 0, subTitleCanvas.width, subTitleCanvas.height
+		);
+
+		context.drawImage(
+			subTitleCanvas,
+			adjustBlankSubTitleOffsetX, -adjustBlankSubTitleOffsetY,
+			canvas.width+adjustBlankSubTitleWidth, canvas.height+adjustBlankSubTitleHeight
+		);
+	}
+
+	const renderBlankTitle = async (
+		context: CanvasRenderingContext2D,
 		adjustBlankTitleWidth: number,
 		adjustBlankTitleHeight: number,
 		adjustBlankTitleOffsetX: number,
@@ -135,107 +204,107 @@ import { CardPositionStore } from '$lib/store';
 		blankTitleHolePunchingX: number,
 		blankTitleHolePunchingY: number,
 		blankTitleHolePunchingRadius: number,
+		adjustBlankTitleFilterSapia: number,
+		adjustBlankTitleFilterSaturate: number
+	) => {
+		const blankTitleImage = await promiseLoadImage('/resources/blank_cards/blank_title_1.png');
+		const titleCanvas = document.createElement('canvas');
+		const titleContext = titleCanvas.getContext('2d') as CanvasRenderingContext2D;
+
+		titleCanvas.width = blankTitleImage.width;
+		titleCanvas.height = blankTitleImage.height;
+		titleContext.filter =`saturate(${adjustBlankTitleFilterSaturate}%) sepia(${adjustBlankTitleFilterSapia}%)`;
+		titleContext.drawImage(
+			blankTitleImage, 
+			0, 0, blankTitleImage.width, blankTitleImage.height,
+			0, 0, titleCanvas.width, titleCanvas.height
+		);
+		removeCircle(
+			titleContext,
+			blankTitleHolePunchingX,
+			blankTitleHolePunchingY,
+			blankTitleHolePunchingRadius,
+			isBlankTitleHolePunchingPreview
+		);
+
+		context.drawImage(
+			titleCanvas,
+			adjustBlankTitleOffsetX, -adjustBlankTitleOffsetY,
+			canvas.width+adjustBlankTitleWidth, canvas.height+adjustBlankTitleHeight
+		);
+	}
+
+	const renderBlankdialog = async (
+		context: CanvasRenderingContext2D,
 		isBlankDialogHolePunchingPreview: boolean,
 		blankDialogHolePunchingX: number,
 		blankDialogHolePunchingY: number,
 		blankDialogHolePunchingRadius: number,
-		adjustBlankTitleFilterSapia: number,
-		adjustBlankTitleFilterSaturate: number,
 		adjustBlankDialogWidth: number,
 		adjustBlankDialogHeight: number,
 		adjustBlankDialogOffsetX: number,
 		adjustBlankDialogOffsetY: number,
 		adjustBlankDialogFilterSapia: number,
 		adjustBlankDialogFilterSaturate: number,
-		isRenderBlankTitle: boolean,
-		isRenderBlankDialog: boolean
-		) => {
-		const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-		const x = Math.floor(zeroBasedIndex % columns) * cardWidth;
-		const y = Math.floor(zeroBasedIndex / columns) * cardHeight;
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.drawImage(
-			imgElement,
-			adjustSourceOffsetX-x,
-			-y-adjustSourceOffsetY
+	) => {
+		const blankDialogImage = await promiseLoadImage('/resources/blank_cards/blank_dialog_1.png');
+		const dialogCanvas = document.createElement('canvas');
+		const dialogContext = dialogCanvas.getContext('2d') as CanvasRenderingContext2D;
+
+		dialogCanvas.width = blankDialogImage.width;
+		dialogCanvas.height = blankDialogImage.height;
+		dialogContext.filter =`saturate(${adjustBlankDialogFilterSaturate}%) sepia(${adjustBlankDialogFilterSapia}%)`;
+		dialogContext.drawImage(
+			blankDialogImage, 
+			0, 0, blankDialogImage.width, blankDialogImage.height,
+			0, 0, dialogCanvas.width, dialogCanvas.height
 		);
 
-		if (isRenderBlankTitle) {
-			const blankTitle = new Image();
-			blankTitle.src = '/resources/blank_cards/blank_title_1.png';
-			blankTitle.addEventListener('load', () => {
-				const titleCanvas = document.createElement('canvas');
-				const titleContext = titleCanvas.getContext('2d') as CanvasRenderingContext2D;
-				titleCanvas.width = blankTitle.width;
-				titleCanvas.height = blankTitle.height;
-				titleContext.filter =`saturate(${adjustBlankTitleFilterSaturate}%) sepia(${adjustBlankTitleFilterSapia}%)`;
-				titleContext.drawImage(
-					blankTitle, 
-					0, 0, blankTitle.width, blankTitle.height,
-					0, 0, titleCanvas.width, titleCanvas.height
-				);
-				
-				if (isBlankTitleHolePunchingPreview) {
-					titleContext.strokeStyle = '#ff0000';
-					titleContext.beginPath();
-					titleContext.arc(blankTitleHolePunchingX, blankTitleHolePunchingY, blankTitleHolePunchingRadius+1, 0, 2 * Math.PI, false);	
-					titleContext.stroke();
-				}
+		removeCircle(
+			dialogContext,
+			blankDialogHolePunchingX,
+			blankDialogHolePunchingY,
+			blankDialogHolePunchingRadius,
+			isBlankDialogHolePunchingPreview
+		);
 
-				titleContext.save();
-				titleContext.globalCompositeOperation = 'destination-out';
-				titleContext.beginPath();
-				titleContext.arc(blankTitleHolePunchingX, blankTitleHolePunchingY, blankTitleHolePunchingRadius, 0, 2 * Math.PI, false);
-				titleContext.fill();
-				titleContext.restore();
+		context.drawImage(
+			dialogCanvas, 
+			adjustBlankDialogOffsetX-(adjustBlankDialogWidth/2), -adjustBlankDialogOffsetY, 
+			canvas.width+adjustBlankDialogWidth, canvas.height+adjustBlankDialogHeight
+		);
+	}
 
-				ctx.drawImage(
-					titleCanvas,
-					adjustBlankTitleOffsetX, -adjustBlankTitleOffsetY,
-					canvas.width+adjustBlankTitleWidth, canvas.height+adjustBlankTitleHeight
-				);
-			});
+	const removeCircle = (
+		context: CanvasRenderingContext2D,
+		x: number,
+		y: number,
+		radius: number,
+		isDisplayBoundary = false
+	) => {
+		if (isDisplayBoundary) {
+			context.strokeStyle = '#ff0000';
+			context.beginPath();
+			context.arc(x, y, radius+1, 0, 2 * Math.PI, false);	
+			context.stroke();
 		}
 
-		if (isRenderBlankDialog) {
-			const blankDialog = new Image();
-			blankDialog.src = '/resources/blank_cards/blank_dialog_1.png';
-			blankDialog.addEventListener('load', () => {
-				const dialogCanvas = document.createElement('canvas');
-				const dialogContext = dialogCanvas.getContext('2d') as CanvasRenderingContext2D;
-				dialogCanvas.width = blankDialog.width;
-				dialogCanvas.height = blankDialog.height;
-				dialogContext.filter =`saturate(${adjustBlankDialogFilterSaturate}%) sepia(${adjustBlankDialogFilterSapia}%)`;
-				dialogContext.drawImage(
-					blankDialog, 
-					0, 0, blankDialog.width, blankDialog.height,
-					0, 0, dialogCanvas.width, dialogCanvas.height
-				);
+		context.save();
+		context.filter = "bluer(5px)";
+		context.globalCompositeOperation = 'destination-out';
+		context.beginPath();
+		context.arc(x, y, radius, 0, 2 * Math.PI, false);
+		context.fill();
+		context.restore();
+		context.filter = "";
+	}
 
-				if (isBlankDialogHolePunchingPreview) {
-					dialogContext.strokeStyle = '#ff0000';
-					dialogContext.beginPath();
-					dialogContext.arc(blankDialogHolePunchingX, blankDialogHolePunchingY, blankDialogHolePunchingRadius+1, 0, 2 * Math.PI, false);	
-					dialogContext.stroke();
-				}
-
-				dialogContext.save();
-				dialogContext.filter = "blur(5px)";
-				dialogContext.globalCompositeOperation = 'destination-out';
-				dialogContext.beginPath();
-				dialogContext.arc(blankDialogHolePunchingX, blankDialogHolePunchingY, blankDialogHolePunchingRadius, 0, 2 * Math.PI, false);
-				dialogContext.fill();
-				dialogContext.restore();
-				dialogContext.filter = "";
-
-				ctx.drawImage(
-					dialogCanvas, 
-					adjustBlankDialogOffsetX-(adjustBlankDialogWidth/2), -adjustBlankDialogOffsetY, 
-					canvas.width+adjustBlankDialogWidth, canvas.height+adjustBlankDialogHeight
-				);
-			});
-		}
-	};
+	const promiseLoadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+		const image = new Image();
+		image.addEventListener('load', () => resolve(image));
+		image.addEventListener('error', () => reject(image));
+		image.src = url;
+	});
 
 	const saveImages = () => {
 		$globalLoading = true;
@@ -286,44 +355,67 @@ import { CardPositionStore } from '$lib/store';
 			</div>
 			<div>
 				<input id="blankTitleAdjustWidth" type="number" bind:value={adjustBlankTitleWidth}/>
-				<label for="blankTitleAdjustWidth">Title width adjustment</label>
+				<label for="blankTitleAdjustWidth">width adjustment</label>
 			</div>
 			<div>
 				<input id="blankTitleAdjustHeight" type="number" bind:value={adjustBlankTitleHeight}/>
-				<label for="blankTitleAdjustHeight">Title height adjustment</label>
+				<label for="blankTitleAdjustHeight">height adjustment</label>
 			</div>
 			<div>
 				<input id="blankTitleAdjustOffsetX" type="number" bind:value={adjustBlankTitleOffsetX}/>
-				<label for="blankTitleAdjustOffsetX">Title offset X</label>
+				<label for="blankTitleAdjustOffsetX">offset X</label>
 			</div>
 			<div>
 				<input id="blankTitleAdjustOffsetY" type="number" bind:value={adjustBlankTitleOffsetY}/>
-				<label for="blankTitleAdjustOffsetY">Title offset Y</label>
+				<label for="blankTitleAdjustOffsetY">offset Y</label>
 			</div>
 			<div>
 				<input id="blankTitleFilterSapia" type="number" bind:value={adjustBlankTitleFilterSapia}/>
-				<label for="blankTitleFilterSapia">Title filter sapia</label>
+				<label for="blankTitleFilterSapia">filter sapia</label>
 			</div>
 			<div>
 				<input id="blankTitleFilterSaturate" type="number" bind:value={adjustBlankTitleFilterSaturate}/>
-				<label for="blankTitleFilterSaturate">Title filter saturate</label>
+				<label for="blankTitleFilterSaturate">filter saturate</label>
 			</div>
-			<br/>
 			<div>
 				<input id="blankTitleHolePunchingPreview" type="checkbox" bind:checked={isBlankTitleHolePunchingPreview} />
 				<label for="blankTitleHolePunchingPreview">Preview Blank Title Hole Punching</label>
 			</div>
 			<div>
 				<input id="blankTitleHolePunchingX" type="number" bind:value={blankTitleHolePunchingX}/>
-				<label for="blankTitleHolePunchingX">Title hole punching X</label>
+				<label for="blankTitleHolePunchingX">hole punching X</label>
 			</div>
 			<div>
 				<input id="blankTitleHolePunchingY" type="number" bind:value={blankTitleHolePunchingY}/>
-				<label for="blankTitleHolePunchingY">Title hole punching Y</label>
+				<label for="blankTitleHolePunchingY">hole punching Y</label>
 			</div>
 			<div>
 				<input id="blankTitleHolePunchingRadius" type="number" bind:value={blankTitleHolePunchingRadius}/>
-				<label for="blankTitleHolePunchingRadius">Title hole punching radius</label>
+				<label for="blankTitleHolePunchingRadius">hole punching radius</label>
+			</div>
+			<br/>
+			<h3>
+				Blank Sub Title Adjustment
+			</h3>
+			<div>
+				<input id="displayBlankTitle" type="checkbox" bind:checked={isDisplayBlankSubTitle} />
+				<label for="displayBlankTitle">Display Blank Sub Title</label>
+			</div>
+			<div>
+				<input id="blankTitleAdjustWidth" type="number" bind:value={adjustBlankSubTitleWidth}/>
+				<label for="blankTitleAdjustWidth">width adjustment</label>
+			</div>
+			<div>
+				<input id="blankTitleAdjustHeight" type="number" bind:value={adjustBlankSubTitleHeight}/>
+				<label for="blankTitleAdjustHeight">height adjustment</label>
+			</div>
+			<div>
+				<input id="blankTitleAdjustOffsetX" type="number" bind:value={adjustBlankSubTitleOffsetX}/>
+				<label for="blankTitleAdjustOffsetX">offset X</label>
+			</div>
+			<div>
+				<input id="blankTitleAdjustOffsetY" type="number" bind:value={adjustBlankSubTitleOffsetY}/>
+				<label for="blankTitleAdjustOffsetY">offset Y</label>
 			</div>
 			<br/>
 			<h3>
