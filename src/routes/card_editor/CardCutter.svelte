@@ -162,7 +162,7 @@ import { CardPositionStore } from '$lib/store';
 
 		if (isRenderBlankTitle) {
 			const blankTitle = new Image();
-			blankTitle.src = '/resources/blank_cards/blank_title_2.png';
+			blankTitle.src = '/resources/blank_cards/blank_title_1.png';
 			blankTitle.addEventListener('load', () => {
 				const titleCanvas = document.createElement('canvas');
 				const titleContext = titleCanvas.getContext('2d') as CanvasRenderingContext2D;
