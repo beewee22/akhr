@@ -18,12 +18,16 @@ import { CardPositionStore } from '$lib/store';
 	let adjustSourceOffsetX = 0;
 	let adjustSourceOffsetY = 0;
 	let isDisplayBlankTitle = false;
+	let isBlankTitleHolePunchingPreview = false;
+	let blankTitleHolePunchingX = 107;
+	let blankTitleHolePunchingY = 105;
+	let blankTitleHolePunchingRadius = 56;
 	let adjustBlankTitleWidth = 68;
 	let adjustBlankTitleHeight = 67;
 	let adjustBlankTitleOffsetX = -33;
-	let adjustBlankTitleOffsetY = 40;
-	let adjustBlankTitleFilterSapia = 0;
-	let adjustBlankTitleFilterSaturate = 0;
+	let adjustBlankTitleOffsetY = 39.2;
+	let adjustBlankTitleFilterSapia = -1;
+	let adjustBlankTitleFilterSaturate = 100;
 	let isDisplayBlankDialog = false;
 	let adjustBlankDialogWidth = 67;
 	let adjustBlankDialogHeight = 86;
@@ -57,6 +61,10 @@ import { CardPositionStore } from '$lib/store';
 					adjustBlankTitleHeight,
 					adjustBlankTitleOffsetX,
 					adjustBlankTitleOffsetY,
+					isBlankTitleHolePunchingPreview,
+					blankTitleHolePunchingX,
+					blankTitleHolePunchingY,
+					blankTitleHolePunchingRadius,
 					adjustBlankTitleFilterSapia,
 					adjustBlankTitleFilterSaturate,
 					adjustBlankDialogWidth,
@@ -111,6 +119,10 @@ import { CardPositionStore } from '$lib/store';
 		adjustBlankTitleHeight: number,
 		adjustBlankTitleOffsetX: number,
 		adjustBlankTitleOffsetY: number,
+		isBlankTitleHolePunchingPreview: boolean,
+		blankTitleHolePunchingX: number,
+		blankTitleHolePunchingY: number,
+		blankTitleHolePunchingRadius: number,
 		adjustBlankTitleFilterSapia: number,
 		adjustBlankTitleFilterSaturate: number,
 		adjustBlankDialogWidth: number,
@@ -142,8 +154,23 @@ import { CardPositionStore } from '$lib/store';
 				titleContext.drawImage(
 					blankTitle, 
 					0, 0, blankTitle.width, blankTitle.height,
-					0, 0, titleCanvas.width, titleCanvas.height);
-	
+					0, 0, titleCanvas.width, titleCanvas.height
+				);
+				
+				if (isBlankTitleHolePunchingPreview) {
+					titleContext.strokeStyle = '#ff0000';
+					titleContext.beginPath();
+					titleContext.arc(blankTitleHolePunchingX, blankTitleHolePunchingY, blankTitleHolePunchingRadius+1, 0, 2 * Math.PI, false);	
+					titleContext.stroke();
+				}
+
+				titleContext.save();
+				titleContext.globalCompositeOperation = 'destination-out';
+				titleContext.beginPath();
+				titleContext.arc(blankTitleHolePunchingX, blankTitleHolePunchingY, blankTitleHolePunchingRadius, 0, 2 * Math.PI, false);
+				titleContext.fill();
+				titleContext.restore();
+
 				ctx.drawImage(
 					titleCanvas,
 					adjustBlankTitleOffsetX, -adjustBlankTitleOffsetY,
@@ -235,6 +262,23 @@ import { CardPositionStore } from '$lib/store';
 			<div>
 				<input id="blankTitleFilterSaturate" type="number" bind:value={adjustBlankTitleFilterSaturate}/>
 				<label for="blankTitleFilterSaturate">Title filter saturate</label>
+			</div>
+			<br/>
+			<div>
+				<input id="blankTitleHolePunchingPreview" type="checkbox" bind:checked={isBlankTitleHolePunchingPreview} />
+				<label for="blankTitleHolePunchingPreview">Preview Blank Title Hole Punching</label>
+			</div>
+			<div>
+				<input id="blankTitleHolePunchingX" type="number" bind:value={blankTitleHolePunchingX}/>
+				<label for="blankTitleHolePunchingX">Title hole punching X</label>
+			</div>
+			<div>
+				<input id="blankTitleHolePunchingY" type="number" bind:value={blankTitleHolePunchingY}/>
+				<label for="blankTitleHolePunchingY">Title hole punching Y</label>
+			</div>
+			<div>
+				<input id="blankTitleHolePunchingRadius" type="number" bind:value={blankTitleHolePunchingRadius}/>
+				<label for="blankTitleHolePunchingRadius">Title hole punching radius</label>
 			</div>
 			<br/>
 			<h3>
