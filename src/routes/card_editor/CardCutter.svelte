@@ -11,6 +11,7 @@
 	export let rows = 7;
 	export let src: string;
 	export let index = 1;
+
 	let imgElement: HTMLImageElement;
 	let isImageLoaded = false;
 	let canvas: HTMLCanvasElement;
@@ -31,17 +32,20 @@
 	let adjustBlankTitleHeight = 67;
 	let adjustBlankTitleOffsetX = -33;
 	let adjustBlankTitleOffsetY = 39.2;
+	let adjustBlankTitleRotate = 0;
+	let adjustBlankTitleFilterSapia = -1;
+	let adjustBlankTitleFilterSaturate = 100;
 	let adjustBlankSubTitleWidth = 2;
 	let adjustBlankSubTitleHeight = 20;
 	let adjustBlankSubTitleOffsetX = -1;
 	let adjustBlankSubTitleOffsetY = 8;
-	let adjustBlankTitleFilterSapia = -1;
-	let adjustBlankTitleFilterSaturate = 100;
+	let adjustBlankSubTitleRotate = 0;
 	let isDisplayBlankDialog = false;
 	let adjustBlankDialogWidth = 67;
 	let adjustBlankDialogHeight = 86;
 	let adjustBlankDialogOffsetX = 0;
 	let adjustBlankDialogOffsetY = 41;
+	let adjustBlankDialogRotate = 0;
 	let adjustBlankDialogFilterSapia = 0;
 	let adjustBlankDialogFilterSaturate = 100;
 
@@ -82,7 +86,8 @@
 					adjustBlankSubTitleWidth,
 					adjustBlankSubTitleHeight,
 					adjustBlankSubTitleOffsetX,
-					adjustBlankSubTitleOffsetY
+					adjustBlankSubTitleOffsetY,
+					adjustBlankSubTitleRotate,
 				));
 
 				isDisplayBlankTitle && (await renderBlankTitle(
@@ -91,15 +96,16 @@
 					adjustBlankTitleHeight,
 					adjustBlankTitleOffsetX,
 					adjustBlankTitleOffsetY,
+					adjustBlankTitleRotate,
 					isBlankTitleHolePunchingPreview,
 					blankTitleHolePunchingX,
 					blankTitleHolePunchingY,
 					blankTitleHolePunchingRadius,
 					adjustBlankTitleFilterSapia,
-					adjustBlankTitleFilterSaturate
+					adjustBlankTitleFilterSaturate,
 				));
 
-				isDisplayBlankDialog && (await renderBlankdialog(
+				isDisplayBlankDialog && (await renderBlankDialog(
 					shadowContext,
 					isBlankDialogHolePunchingPreview,
 					blankDialogHolePunchingX,
@@ -109,6 +115,7 @@
 					adjustBlankDialogHeight,
 					adjustBlankDialogOffsetX,
 					adjustBlankDialogOffsetY,
+					adjustBlankDialogRotate,
 					adjustBlankDialogFilterSapia,
 					adjustBlankDialogFilterSaturate,
 				));
@@ -172,7 +179,8 @@
 		adjustBlankSubTitleWidth: number,
 		adjustBlankSubTitleHeight: number,
 		adjustBlankSubTitleOffsetX: number,
-		adjustBlankSubTitleOffsetY: number
+		adjustBlankSubTitleOffsetY: number,
+		adjustBlankSubTitleRotate: number
 	) => {
 		const blankSubTitleImage = await promiseLoadImage('/resources/blank_cards/blank_subtitle_1.png');
 		const subTitleCanvas = document.createElement('canvas');
@@ -187,11 +195,13 @@
 			0, 0, subTitleCanvas.width, subTitleCanvas.height
 		);
 
+		context.rotate(adjustBlankSubTitleRotate * Math.PI / 180);
 		context.drawImage(
 			subTitleCanvas,
 			adjustBlankSubTitleOffsetX, -adjustBlankSubTitleOffsetY,
 			canvas.width+adjustBlankSubTitleWidth, canvas.height+adjustBlankSubTitleHeight
 		);
+		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	const renderBlankTitle = async (
@@ -200,6 +210,7 @@
 		adjustBlankTitleHeight: number,
 		adjustBlankTitleOffsetX: number,
 		adjustBlankTitleOffsetY: number,
+		adjustBlankTitleRotate: number,
 		isBlankTitleHolePunchingPreview: boolean,
 		blankTitleHolePunchingX: number,
 		blankTitleHolePunchingY: number,
@@ -219,6 +230,7 @@
 			0, 0, blankTitleImage.width, blankTitleImage.height,
 			0, 0, titleCanvas.width, titleCanvas.height
 		);
+
 		removeCircle(
 			titleContext,
 			blankTitleHolePunchingX,
@@ -227,14 +239,16 @@
 			isBlankTitleHolePunchingPreview
 		);
 
+		context.rotate(adjustBlankTitleRotate * Math.PI / 180);
 		context.drawImage(
 			titleCanvas,
 			adjustBlankTitleOffsetX, -adjustBlankTitleOffsetY,
 			canvas.width+adjustBlankTitleWidth, canvas.height+adjustBlankTitleHeight
 		);
+		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
-	const renderBlankdialog = async (
+	const renderBlankDialog = async (
 		context: CanvasRenderingContext2D,
 		isBlankDialogHolePunchingPreview: boolean,
 		blankDialogHolePunchingX: number,
@@ -244,6 +258,7 @@
 		adjustBlankDialogHeight: number,
 		adjustBlankDialogOffsetX: number,
 		adjustBlankDialogOffsetY: number,
+		adjustBlankDialogRotate: number,
 		adjustBlankDialogFilterSapia: number,
 		adjustBlankDialogFilterSaturate: number,
 	) => {
@@ -268,11 +283,13 @@
 			isBlankDialogHolePunchingPreview
 		);
 
+		context.rotate(adjustBlankDialogRotate * Math.PI / 180);
 		context.drawImage(
 			dialogCanvas, 
 			adjustBlankDialogOffsetX-(adjustBlankDialogWidth/2), -adjustBlankDialogOffsetY, 
 			canvas.width+adjustBlankDialogWidth, canvas.height+adjustBlankDialogHeight
 		);
+		context.setTransform(1, 0, 0, 1, 0, 0);
 	}
 
 	const removeCircle = (
@@ -338,11 +355,11 @@
 				Source Adjustment
 			</h3>
 			<div>
-				<input id="sourceOffsetX" type="number" bind:value={adjustSourceOffsetX} />
+				<input id="sourceOffsetX" type="number" bind:value={adjustSourceOffsetX} step="0.1"/>
 				<label for="sourceOffsetX">Source offset X</label>
 			</div>
 			<div>
-				<input id="sourceOffsetX" type="number" bind:value={adjustSourceOffsetY} />
+				<input id="sourceOffsetX" type="number" bind:value={adjustSourceOffsetY} step="0.1"/>
 				<label for="sourceOffsetX">Source offset Y</label>
 			</div>
 			<br/>
@@ -362,12 +379,16 @@
 				<label for="blankTitleAdjustHeight">height adjustment</label>
 			</div>
 			<div>
-				<input id="blankTitleAdjustOffsetX" type="number" bind:value={adjustBlankTitleOffsetX}/>
+				<input id="blankTitleAdjustOffsetX" type="number" bind:value={adjustBlankTitleOffsetX} step="0.1"/>
 				<label for="blankTitleAdjustOffsetX">offset X</label>
 			</div>
 			<div>
-				<input id="blankTitleAdjustOffsetY" type="number" bind:value={adjustBlankTitleOffsetY}/>
+				<input id="blankTitleAdjustOffsetY" type="number" bind:value={adjustBlankTitleOffsetY} step="0.1"/>
 				<label for="blankTitleAdjustOffsetY">offset Y</label>
+			</div>
+			<div>
+				<input id="blankTitleAdjustRotate" type="number" bind:value={adjustBlankTitleRotate} step="0.1"/>
+				<label for="blankTitleAdjustRotate">rotate</label>
 			</div>
 			<div>
 				<input id="blankTitleFilterSapia" type="number" bind:value={adjustBlankTitleFilterSapia}/>
@@ -382,11 +403,11 @@
 				<label for="blankTitleHolePunchingPreview">Preview Blank Title Hole Punching</label>
 			</div>
 			<div>
-				<input id="blankTitleHolePunchingX" type="number" bind:value={blankTitleHolePunchingX}/>
+				<input id="blankTitleHolePunchingX" type="number" bind:value={blankTitleHolePunchingX} step="0.1"/>
 				<label for="blankTitleHolePunchingX">hole punching X</label>
 			</div>
 			<div>
-				<input id="blankTitleHolePunchingY" type="number" bind:value={blankTitleHolePunchingY}/>
+				<input id="blankTitleHolePunchingY" type="number" bind:value={blankTitleHolePunchingY} step="0.1"/>
 				<label for="blankTitleHolePunchingY">hole punching Y</label>
 			</div>
 			<div>
@@ -398,24 +419,28 @@
 				Blank Sub Title Adjustment
 			</h3>
 			<div>
-				<input id="displayBlankTitle" type="checkbox" bind:checked={isDisplayBlankSubTitle} />
-				<label for="displayBlankTitle">Display Blank Sub Title</label>
+				<input id="displayBlankSubTitle" type="checkbox" bind:checked={isDisplayBlankSubTitle} />
+				<label for="displayBlankSubTitle">Display Blank Sub Title</label>
 			</div>
 			<div>
-				<input id="blankTitleAdjustWidth" type="number" bind:value={adjustBlankSubTitleWidth}/>
-				<label for="blankTitleAdjustWidth">width adjustment</label>
+				<input id="blankSubTitleAdjustWidth" type="number" bind:value={adjustBlankSubTitleWidth}/>
+				<label for="blankSubTitleAdjustWidth">width adjustment</label>
 			</div>
 			<div>
-				<input id="blankTitleAdjustHeight" type="number" bind:value={adjustBlankSubTitleHeight}/>
-				<label for="blankTitleAdjustHeight">height adjustment</label>
+				<input id="blankSubTitleAdjustHeight" type="number" bind:value={adjustBlankSubTitleHeight}/>
+				<label for="blankSubTitleAdjustHeight">height adjustment</label>
 			</div>
 			<div>
-				<input id="blankTitleAdjustOffsetX" type="number" bind:value={adjustBlankSubTitleOffsetX}/>
-				<label for="blankTitleAdjustOffsetX">offset X</label>
+				<input id="blankSubTitleAdjustOffsetX" type="number" bind:value={adjustBlankSubTitleOffsetX} step="0.1"/>
+				<label for="blankSubTitleAdjustOffsetX">offset X</label>
 			</div>
 			<div>
-				<input id="blankTitleAdjustOffsetY" type="number" bind:value={adjustBlankSubTitleOffsetY}/>
-				<label for="blankTitleAdjustOffsetY">offset Y</label>
+				<input id="blankSubTitleAdjustOffsetY" type="number" bind:value={adjustBlankSubTitleOffsetY} step="0.1"/>
+				<label for="blankSubTitleAdjustOffsetY">offset Y</label>
+			</div>
+			<div>
+				<input id="blankSubTitleAdjustRotate" type="number" bind:value={adjustBlankSubTitleRotate} step="0.1"/>
+				<label for="blankSubTitleAdjustRotate">rotate</label>
 			</div>
 			<br/>
 			<h3>
@@ -430,16 +455,20 @@
 				<label for="blankDialogAdjustWidth">Dialog width adjustment</label>
 			</div>
 			<div>
-				<input id="blankDialogAdjustHeight" type="number" bind:value={adjustBlankDialogHeight}/>
+				<input id="blankDialogAdjustHeight" type="number" bind:value={adjustBlankDialogHeight} step="0.1"/>
 				<label for="blankDialogAdjustHeight">Dialog height adjustment</label>
 			</div>
 			<div>
-				<input id="blankDialogAdjustOffsetX" type="number" bind:value={adjustBlankDialogOffsetX}/>
+				<input id="blankDialogAdjustOffsetX" type="number" bind:value={adjustBlankDialogOffsetX} step="0.1"/>
 				<label for="blankDialogAdjustOffsetX">Dialog offset X</label>
 			</div>
 			<div>
 				<input id="blankDialogAdjustOffsetY" type="number" bind:value={adjustBlankDialogOffsetY}/>
 				<label for="blankDialogAdjustOffsetY">Dialog offset Y</label>
+			</div>
+			<div>
+				<input id="blankDialogAdjustRotate" type="number" bind:value={adjustBlankDialogRotate} step="0.1"/>
+				<label for="blankDialogAdjustRotate">Dialog rotate</label>
 			</div>
 			<div>
 				<input id="blankDialogFilterSapia" type="number" bind:value={adjustBlankDialogFilterSapia}/>
@@ -455,15 +484,15 @@
 				<label for="blankDialogHolePunchingPreview">Preview Blank Dialog Hole Punching</label>
 			</div>
 			<div>
-				<input id="blankDialogHolePunchingX" type="number" bind:value={blankDialogHolePunchingX}/>
+				<input id="blankDialogHolePunchingX" type="number" bind:value={blankDialogHolePunchingX} step="0.1"/>
 				<label for="blankDialogHolePunchingX">Dialog hole punching X</label>
 			</div>
 			<div>
-				<input id="blankDialogHolePunchingY" type="number" bind:value={blankDialogHolePunchingY}/>
+				<input id="blankDialogHolePunchingY" type="number" bind:value={blankDialogHolePunchingY} step="0.1"/>
 				<label for="blankDialogHolePunchingY">Dialog hole punching Y</label>
 			</div>
 			<div>
-				<input id="blankDialogHolePunchingRadius" type="number" bind:value={blankDialogHolePunchingRadius}/>
+				<input id="blankDialogHolePunchingRadius" type="number" bind:value={blankDialogHolePunchingRadius} step="0.1"/>
 				<label for="blankDialogHolePunchingRadius">Dialog hole punching radius</label>
 			</div>
 		</div>
